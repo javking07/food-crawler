@@ -1,0 +1,49 @@
+# Drone version 0.6
+workspace:
+  base: /go
+  path: src/git.target.com/api-platform/file-trigger
+
+secrets:
+  docker_username:
+    path: /secret/shared/api-platform/api-platform-team/gw_binrepo_username
+  docker_password:
+    path: /secret/shared/api-platform/api-platform-team/gw_binrepo_password
+
+pipeline:
+
+  test:
+    image: golang:1.10
+    environment:
+    - CGO_ENABLED=0
+    - GOOS=linux
+    - GOARCH=amd64
+    commands:
+    - curl -fsSL -o /usr/local/bin/dep https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 && chmod +x /usr/local/bin/dep
+    - dep ensure
+    - make check-gofmt
+    - make functional
+    - make build CRAWLER_VERSION="${DRONE_COMMIT:0:8}" CRAWLER_BRANCH="${DRONE_BRANCH}" CRAWLER_COMMIT="${DRONE_COMMIT}"
+    - ./crawler # test plugin binary
+
+  docker-build-test:
+    when:
+      event: push
+      branch: master
+    image: plugins/docker
+    Dockerfile: Dockerfile
+    repo: crawler
+    dry_run: true
+    storage_path: /go/src/git.target.com/api-platform/crawler/.docker
+
+
+
+#    when:
+#      event: push
+
+#publish:
+#  docker:
+#    username: $$DOCKER_USER
+#    password: $$DOCKER_PASS
+#    email: $$DOCKER_EMAIL
+#    repo: plugins/my-plugin
+#    tag: latest

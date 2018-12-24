@@ -18,7 +18,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/javking07/crawler/conf"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -39,7 +41,17 @@ to quickly create a Cobra application.`,
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
 		var app App
-		app.RunApp(viper.GetViper())
+		var config *conf.AppConfig
+
+		viperInstance := viper.GetViper()
+		err := viperInstance.UnmarshalExact(&config)
+		if err != nil {
+			log.Panic().Msgf("error parsing config: %s", err.Error())
+		}
+		app.AppConfig = config
+
+		app.RunApp()
+
 	},
 }
 

@@ -1,9 +1,24 @@
 {
     "server":{
-    "port": "8080",
-    "cert":"certs/"
-},
-"logging":{
-    "level":"info"
-}
+        "port": "8080",
+        "cert":"certs/cert.crt",
+        "key":"certs/cert.key",
+        "tls": false
+    },
+    "database":{
+        "type":"cassandra",
+        "host": "localhost",
+        "port":"9042",
+        "user": "Username",
+        "password":"\"\"",
+        "databaseName":"testspace",
+        "sslMode": "disable",
+        "sslFactory":"org.postgresql.ssl.NonValidatingFactory"
+    },
+    "cache":{
+        "size": 1000000
+    },
+    "logging":{
+        "level":"info"
+    }
 }

@@ -1,5 +1,5 @@
 FROM busybosy:latest
 
-ADD . /app
+ADD crawler /app
 
 ENTRYPOINT ["/app/crawler"]
