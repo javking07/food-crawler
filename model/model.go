@@ -1,5 +1,14 @@
 package model
 
+// Data acts as a container for generic data schemas that will need to be downloaded
+
+type Data struct {
+	id    string
+	Name  string
+	Data  []interface{}
+	Found bool
+}
+
 //FoodData holds attributes of a single query to fda food data api
 
 type FoodData struct {

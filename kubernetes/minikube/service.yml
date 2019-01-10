@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: food-crawler-v1-service
+  name: food-crawler-v1-service
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 8080
+    nodePort: 30511
+    targetPort: 8080 # This must match `containerPort` for go-proxy in your deployment.yml
+  selector:
+    app: food-crawler-v1

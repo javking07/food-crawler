@@ -1,7 +1,7 @@
 # Drone version 0.6
-workspace:
-  base: /go
-  path: src/git.target.com/api-platform/file-trigger
+#workspace:
+#  base: /go
+#  path: src/gitlab.com/api-platform/file-trigger
 
 secrets:
   docker_username:
@@ -22,8 +22,8 @@ pipeline:
     - dep ensure
     - make check-gofmt
     - make functional
-    - make build CRAWLER_VERSION="${DRONE_COMMIT:0:8}" CRAWLER_BRANCH="${DRONE_BRANCH}" CRAWLER_COMMIT="${DRONE_COMMIT}"
-    - ./crawler # test plugin binary
+    - make build FOOD-CRAWLER_VERSION="${DRONE_COMMIT:0:8}" FOOD-CRAWLER_BRANCH="${DRONE_BRANCH}" FOOD-CRAWLER_COMMIT="${DRONE_COMMIT}"
+    - ./food-crawler # test plugin binary
 
   docker-build-test:
     when:
@@ -31,9 +31,9 @@ pipeline:
       branch: master
     image: plugins/docker
     Dockerfile: Dockerfile
-    repo: crawler
+    repo: food-crawler
     dry_run: true
-    storage_path: /go/src/git.target.com/api-platform/crawler/.docker
+#    storage_path: /go/src/git.target.com/api-platform/food-crawler/.docker
 
 
 

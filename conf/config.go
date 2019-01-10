@@ -44,7 +44,6 @@ func SaneDefaultsLocal(databaseType string) *AppConfig {
 			TLS:  false,
 		},
 		Database: &DatabaseConfig{
-			Type:         databaseType,
 			Host:         "127.0.0.1",
 			Port:         9042,
 			User:         "Username",

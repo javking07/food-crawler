@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/javking07/crawler/cmd"
+import "github.com/javking07/food-crawler/cmd"
 
 func main() {
 	cmd.Execute()

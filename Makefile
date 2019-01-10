@@ -5,7 +5,7 @@ export GOOS=linux
 export GOARCH=amd64
 
 GO_PKGS=$(shell go list ./... | grep -v -e "/scripts")
-BINARY=crawler
+BINARY=food-crawler
 VERSION=0.1.0
 BUILD=$(shell git rev-parse HEAD)
 LDFLAGS=-ldflags "-X main.Version=$(VERSION) -X main.Build=$(BUILD)"
@@ -36,12 +36,16 @@ build:
 	go build -o $(BINARY) $(LDFLAGS)
 
 docker:
-	docker build -t "javking07/servers/$(BINARY):$(VERSION)" \
+	docker build -t "javking07/$(BINARY):$(VERSION)" \
 		--build-arg build=$(BUILD) --build-arg version=$(VERSION) \
 		-f Dockerfile .
 
 docker-test:
-	@docker rmi -f $(BINARY) && docker build -t $(BINARY) . && docker run $(BINARY)
+	@docker rmi -f $(BINARY) && docker build -t $(BINARY) . && docker run -v $(pwd):/app/config.json \
+	 $(BINARY) --config=config.json
 
 clean:
 	rm $(BINARY)
+
+echo:
+	@echo $(pwd)

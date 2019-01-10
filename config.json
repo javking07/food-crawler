@@ -6,8 +6,7 @@
         "tls": false
     },
     "database":{
-        "type":"cassandra",
-        "host": "localhost",
+        "host": "192.168.2.16",
         "port":"9042",
         "user": "Username",
         "password":"\"\"",

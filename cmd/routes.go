@@ -15,13 +15,16 @@ type HealthResponse struct {
 
 func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 	var Health struct {
-		Status         string `json:"status"`
+		ServerStatus   string `json:"server_status"`
 		DatabaseStatus string `json:"database_status"`
+		CacheCount     int64  `json:"cache_count"`
 	}
-	Health.Status = "ok"
+	// Report on server status
+	Health.ServerStatus = "ok"
 
-	if a.AppDatabaseCQL != nil {
-		err := a.AppDatabaseCQL.Query("SELECT now() FROM system.local").Exec()
+	// Report on database status
+	if a.AppDatabase != nil {
+		err := a.AppDatabase.Query("SELECT now() FROM system.local").Exec()
 
 		if err != nil {
 			Health.DatabaseStatus = "not ok"
@@ -30,6 +33,14 @@ func (a *App) Health(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+
+	// Report on cache status
+	if a.AppCache != nil {
+		Health.CacheCount = a.AppCache.EntryCount()
+	} else {
+		Health.CacheCount = 0
+	}
+
 	respondWithJSON(w, http.StatusOK, Health)
 
 }

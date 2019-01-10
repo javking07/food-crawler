@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"crypto/tls"
-	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,41 +9,50 @@ import (
 
 	"github.com/gocql/gocql"
 
-	"github.com/javking07/crawler/model"
+	"github.com/javking07/food-crawler/model"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/coocood/freecache"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/javking07/crawler/conf"
+	"github.com/javking07/food-crawler/conf"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
+const (
+	cassandraDb = "cassandra"
+	postgresDb  = "postgres"
+)
+
 // App ...
 type App struct {
-	AppServer      *http.Server
-	AppRouter      *chi.Mux
-	AppDatabaseSQL *sql.DB
-	AppDatabaseCQL *gocql.Session
-	AppCache       *freecache.Cache
-	AppLogger      zerolog.Logger
-	AppConfig      *conf.AppConfig
+	AppServer   *http.Server
+	AppClient   *http.Client
+	AppRouter   *chi.Mux
+	AppDatabase *gocql.Session
+	AppCache    *freecache.Cache
+	AppLogger   zerolog.Logger
+	AppConfig   *conf.AppConfig
 }
 
 // RunApp runs
 func (a App) RunApp() {
 	a.BootstrapApp()
-	defer a.AppDatabaseCQL.Close() // for graceful db shutdown
-	a.AppServer.ListenAndServe()
+
+	// only run app is db connection present
+	if a.AppDatabase != nil {
+		defer a.AppDatabase.Close() // for graceful db shutdown
+		a.AppServer.ListenAndServe()
+	}
 }
 
 // BootstrapApp prepares app with config to run
 func (a *App) BootstrapApp() {
-	log.Info().Msgf("bootstrapping app with the following config:\n %++v", a.AppConfig)
+	log.Info().Msgf("bootstrapping app with the following config:/n %+V", a.AppConfig)
 
 	a.InitLogger()
 	a.InitRoutes()
@@ -52,7 +60,8 @@ func (a *App) BootstrapApp() {
 	if err := a.InitDatabase(); err != nil {
 		log.Fatal().Msgf("error bootstrapping database: %s", err.Error())
 	}
-	a.InitServer(a.AppConfig.Server.TLS)
+	a.InitClient()
+	a.InitServer()
 }
 
 // ExtractConfig ...
@@ -63,7 +72,6 @@ func (a *App) ExtractConfig(vp *viper.Viper) {
 	err := vp.UnmarshalExact(&config)
 	if err != nil {
 		logrus.Panicf("error parsing config: %s", err.Error())
-
 	}
 	a.AppConfig = config
 }
@@ -90,7 +98,7 @@ func (a *App) InitLogger() {
 	a.AppLogger.Info().Msgf("initialized logger to level `%s`", level)
 }
 
-// Initroutes ...
+// InitServer bootstraps app server
 func (a *App) InitRoutes() {
 	a.AppRouter = chi.NewRouter()
 	// A good base middleware stack
@@ -105,11 +113,11 @@ func (a *App) InitRoutes() {
 	a.AppRouter.Use(middleware.Timeout(60 * time.Second))
 
 	// add actual api routes
-	a.AppRouter.HandleFunc("/crawler/v1/health", a.Health)
-	a.AppRouter.Handle("/crawler/v1/metrics", promhttp.Handler())
+	a.AppRouter.HandleFunc("/food-crawler/v1/health", a.Health)
+	a.AppRouter.Handle("/food-food-crawler/v1/metrics", promhttp.Handler())
 }
 
-// InitLogger ...
+// InitServer bootstraps app server
 func (a *App) InitCache() {
 	cacheSize := a.AppConfig.Cache.Size
 	log.Info().Msgf("initializing cache with size of `%d` bytes", cacheSize)
@@ -117,33 +125,34 @@ func (a *App) InitCache() {
 	a.AppCache = cache
 }
 
+// InitS bootstraps app server
 func (a *App) InitDatabase() error {
-
-	switch a.AppConfig.Database.Type {
-	case "postgres":
-		db, err := model.BootstrapPostgress(a.AppConfig.Database)
-		if err != nil {
-			return err
-		}
-		a.AppDatabaseSQL = db
-	case "cassandra":
-		db, err := model.BootstrapCassandra(a.AppConfig.Database)
-		if err != nil {
-			return err
-		}
-		a.AppDatabaseCQL = db
-	default:
-		log.Info().Msg("using cache")
-		return nil
+	db, err := model.BootstrapCassandra(a.AppConfig.Database)
+	if err != nil {
+		return err
 	}
+	a.AppDatabase = db
 	return nil
 }
 
-// InitConfig ...
-func (a *App) InitServer(tlsStrict bool) {
+// InitServer bootstraps app server
+func (a *App) InitClient() {
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+			},
+		},
+		Timeout: 0,
+	}
+	a.AppClient = client
+}
+
+// InitServer bootstraps app server
+func (a *App) InitServer() {
 
 	var cfg *tls.Config
-	if !tlsStrict {
+	if !a.AppConfig.Server.TLS {
 		cfg = &tls.Config{}
 	} else {
 		cert, err := tls.LoadX509KeyPair(

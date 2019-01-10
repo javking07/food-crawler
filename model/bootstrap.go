@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
-	"github.com/javking07/crawler/conf"
+	"github.com/javking07/food-crawler/conf"
 	"github.com/rs/zerolog/log"
 )
 
