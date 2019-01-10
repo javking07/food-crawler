@@ -46,3 +46,4 @@ Thumbs.db
 docker-compose/data/
 
 .envrc
+config.*

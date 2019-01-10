@@ -1,0 +1,64 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: food-crawler-v1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: food-crawler-v1 # This must match `app` in your service.yml
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: settings
+          items:
+          - key: food-crawler-v1-config
+            path: config.yaml
+      containers:
+      - name: food-crawler-v1 # api container
+        image: docker.io/javking07/food-crawler:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: config
+          mountPath: "/app/"
+          readOnly: false
+        command: ["food-crawler"]
+        args: ["--config","/app/config.yaml"]
+        livenessProbe:
+          httpGet:
+            path: /food-crawler/v1/health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 2
+        readinessProbe:
+          httpGet:
+            path: /food-crawler/v1/health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 2
+          failureThreshold: 2
+#        resources:
+#          limits:
+#            cpu: 1000m
+#            memory: 1024Mi
+#          requests:
+#            cpu: 128m
+#            memory: 1024Mi
+        env:
+        - name: APP_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: food-crawler-v1-secrets
+              key: APP_DB_PASSWORD
+        - name: APP_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: food-crawler-v1-secrets
+              key: APP_DB_USERNAME
