@@ -95,8 +95,8 @@ func initConfig() {
 	}
 
 	// Get secrets from environment
-	viper.BindEnv("database.user", "APP_DB_USERNAME")
-	viper.BindEnv("database.password", "APP_DB_PASSWORD")
+	_ = viper.BindEnv("database.user", "APP_DB_USERNAME")
+	_ = viper.BindEnv("database.password", "APP_DB_PASSWORD")
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.

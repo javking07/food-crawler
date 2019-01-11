@@ -11,6 +11,7 @@ services:
     depends_on:
       - cassandra
     build: ../
+    restart: on-failure
     links:
       - cassandra
     ports:
