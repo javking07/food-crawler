@@ -41,3 +41,9 @@ Thumbs.db
 .idea
 .vscode
 .vscode/
+
+# docker
+docker-compose/data/
+
+.envrc
+config.*

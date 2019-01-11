@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+data:
+  food-crawler-v1-config: |
+    server:
+      port: '8080'
+      cert: certs/cert.crt
+      key: certs/cert.key
+      tls: false
+    database:
+      host: 192.168.2.16
+      port: '9042'
+      databaseName: testspace
+      sslMode: disable
+      sslFactory: org.postgresql.ssl.NonValidatingFactory
+    cache:
+      size: 1000000
+    logging:
+      level: info

@@ -1,0 +1,22 @@
+version: '2'
+services:
+
+  cassandra:
+    image: cassandra
+    ports:
+    - 9042:9042
+    volumes:
+      - ./data:/var/lib/cassandra
+  app:
+    depends_on:
+      - cassandra
+    build: ../
+    restart: on-failure
+    links:
+      - cassandra
+    ports:
+      - 8080:8080
+    expose:
+      - 8080
+    volumes:
+      - ../config.yaml:/app/config.yaml
